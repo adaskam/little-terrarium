@@ -59,12 +59,11 @@ export function Terrarium() {
             d="M 90 60 Q 90 52 98 52 L 202 52 Q 210 52 210 60 L 210 78 Q 240 92 240 120 L 240 300 Q 240 340 200 340 L 100 340 Q 60 340 60 300 L 60 120 Q 60 92 90 78 Z"
           />
 
-          {/* Soil */}
-          <path
-            className="soil"
-            d="M 68 300 Q 150 285 232 300 L 232 332 Q 150 340 68 332 Z"
-            opacity="0.85"
-          />
+          <defs>
+            <clipPath id="jarClip">
+              <path d="M97,122 Q92,338 150,350 Q208,338 203,122 Q150,132 97,122 Z" />
+            </clipPath>
+          </defs>
 
           {/* Glass highlight */}
           <path
@@ -76,48 +75,67 @@ export function Terrarium() {
             strokeLinecap="round"
           />
 
-          {/* Plants */}
-          <g className="stem a" style={{ transformOrigin: "150px 300px" }}>
-            <path
-              d="M 150 300 Q 148 240 152 180 Q 156 130 150 90"
-              fill="none"
-              stroke="var(--leaf-2)"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <ellipse className="leaf" cx="140" cy="240" rx="14" ry="7" fill="var(--leaf-1)" transform="rotate(-30 140 240)" />
-            <ellipse className="leaf" cx="162" cy="200" rx="16" ry="8" fill="var(--leaf-3)" transform="rotate(30 162 200)" />
-            <ellipse className="leaf" cx="144" cy="150" rx="13" ry="6" fill="var(--leaf-2)" transform="rotate(-20 144 150)" />
-            <ellipse className="leaf" cx="156" cy="110" rx="10" ry="5" fill="var(--leaf-1)" transform="rotate(25 156 110)" />
+          {/* Everything inside the jar */}
+          <g clipPath="url(#jarClip)">
+            <ellipse cx="150" cy="335" rx="58" ry="14" fill="#5b4632" />
+
+            <g className="stem a" style={{ transformOrigin: "150px 335px" }}>
+              <path
+                d="M150,335 C146,290 152,250 140,205"
+                stroke="var(--leaf-2)"
+                strokeWidth="5"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <g className="leaf">
+                <ellipse cx="128" cy="240" rx="20" ry="9" fill="var(--leaf-1)" transform="rotate(-28 128 240)" />
+                <ellipse cx="156" cy="215" rx="17" ry="8" fill="var(--leaf-3)" transform="rotate(18 156 215)" />
+                <ellipse cx="132" cy="200" rx="14" ry="7" fill="var(--leaf-1)" transform="rotate(-10 132 200)" />
+              </g>
+            </g>
+
+            <g className="stem b" style={{ transformOrigin: "165px 335px" }}>
+              <path
+                d="M165,335 C170,300 160,270 175,230"
+                stroke="var(--leaf-1)"
+                strokeWidth="4.5"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <g className="leaf">
+                <ellipse cx="188" cy="255" rx="18" ry="8" fill="var(--leaf-2)" transform="rotate(24 188 255)" />
+                <ellipse cx="170" cy="235" rx="15" ry="7" fill="var(--leaf-3)" transform="rotate(-16 170 235)" />
+              </g>
+            </g>
+
+            <g className="stem c" style={{ transformOrigin: "132px 335px" }}>
+              <path
+                d="M132,335 C128,315 134,295 126,270"
+                stroke="var(--leaf-3)"
+                strokeWidth="4"
+                fill="none"
+                strokeLinecap="round"
+              />
+              <g className="leaf">
+                <ellipse cx="112" cy="285" rx="13" ry="6" fill="var(--leaf-1)" transform="rotate(-22 112 285)" />
+                <ellipse cx="128" cy="272" rx="11" ry="5.5" fill="var(--leaf-2)" transform="rotate(12 128 272)" />
+              </g>
+            </g>
+
+            <ellipse cx="120" cy="342" rx="6" ry="3" fill="#8a7d6a" />
+            <ellipse cx="175" cy="344" rx="7" ry="3.2" fill="#a29580" />
+            <ellipse cx="150" cy="347" rx="5" ry="2.5" fill="#8a7d6a" />
+
+            {/* Fireflies (clipped to jar interior) */}
+            {fireflies.map((f) => (
+              <g key={f.id} className="firefly" transform={`translate(${f.x} ${f.y})`}>
+                <circle className="glow" r="8" />
+                <circle className="core" r="2.2" />
+              </g>
+            ))}
           </g>
 
-          <g className="stem b" style={{ transformOrigin: "110px 300px" }}>
-            <path
-              d="M 110 300 Q 100 250 108 210 Q 116 175 105 150"
-              fill="none"
-              stroke="var(--leaf-2)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            <ellipse className="leaf" cx="98" cy="260" rx="12" ry="6" fill="var(--leaf-3)" transform="rotate(-40 98 260)" />
-            <ellipse className="leaf" cx="118" cy="225" rx="13" ry="6" fill="var(--leaf-1)" transform="rotate(30 118 225)" />
-            <ellipse className="leaf" cx="100" cy="180" rx="11" ry="5" fill="var(--leaf-2)" transform="rotate(-25 100 180)" />
-          </g>
-
-          <g className="stem c" style={{ transformOrigin: "195px 300px" }}>
-            <path
-              d="M 195 300 Q 205 260 198 225 Q 190 195 202 170"
-              fill="none"
-              stroke="var(--leaf-2)"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            <ellipse className="leaf" cx="208" cy="270" rx="12" ry="6" fill="var(--leaf-1)" transform="rotate(35 208 270)" />
-            <ellipse className="leaf" cx="188" cy="235" rx="13" ry="6" fill="var(--leaf-3)" transform="rotate(-30 188 235)" />
-            <ellipse className="leaf" cx="208" cy="195" rx="10" ry="5" fill="var(--leaf-2)" transform="rotate(25 208 195)" />
-          </g>
-
-          {/* Dust motes */}
+          {/* Dust motes (outside jar, floating in scene) */}
           {MOTES.map((m, i) => (
             <circle
               key={i}
@@ -129,13 +147,6 @@ export function Terrarium() {
             />
           ))}
 
-          {/* Fireflies */}
-          {fireflies.map((f) => (
-            <g key={f.id} className="firefly" transform={`translate(${f.x} ${f.y})`}>
-              <circle className="glow" r="8" />
-              <circle className="core" r="2.2" />
-            </g>
-          ))}
         </svg>
       </div>
 
