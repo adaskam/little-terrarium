@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-// Jar interior bounds (matches the jarClip path below).
-const JAR = { xMin: 97, xMax: 203, yMin: 122, yMax: 350 };
-
 const MOTES = [
   { cx: 90, cy: 300, delay: 0 },
   { cx: 150, cy: 280, delay: -3 },
@@ -17,6 +14,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 export function Terrarium() {
   const [night, setNight] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+  const jarClipPathRef = useRef<SVGPathElement>(null);
   const fireflyLayerRef = useRef<SVGGElement>(null);
   const rafIdsRef = useRef<number[]>([]);
 
@@ -61,6 +59,14 @@ export function Terrarium() {
       layer.appendChild(g);
 
       // Each firefly gets its own independent RAF loop + local drift state.
+      const clipEl = jarClipPathRef.current;
+      const bbox = clipEl?.getBBox() ?? { x: 82, y: 112, width: 136, height: 242 };
+      const pad = 8;
+      const xMin = bbox.x + pad;
+      const xMax = bbox.x + bbox.width - pad;
+      const yMin = bbox.y + pad;
+      const yMax = bbox.y + bbox.height - pad;
+
       let px = x;
       let py = y;
       let vx = (Math.random() - 0.5) * 0.25;
@@ -77,14 +83,13 @@ export function Terrarium() {
         px += vx + Math.sin(t * 1.3) * 0.15;
         py += vy + Math.cos(t * 1.1) * 0.12;
 
-        if (px < JAR.xMin + 6) { px = JAR.xMin + 6; vx = Math.abs(vx); }
-        if (px > JAR.xMax - 6) { px = JAR.xMax - 6; vx = -Math.abs(vx); }
-        if (py < JAR.yMin + 6) { py = JAR.yMin + 6; vy = Math.abs(vy); }
-        if (py > JAR.yMax - 6) { py = JAR.yMax - 6; vy = -Math.abs(vy); }
+        if (px < xMin) { px = xMin; vx = Math.abs(vx); }
+        if (px > xMax) { px = xMax; vx = -Math.abs(vx); }
+        if (py < yMin) { py = yMin; vy = Math.abs(vy); }
+        if (py > yMax) { py = yMax; vy = -Math.abs(vy); }
 
         g.setAttribute("transform", `translate(${px.toFixed(2)} ${py.toFixed(2)})`);
 
-        // Swap out the old id for the new one in the shared ref array.
         const oldIdx = rafIds.indexOf(myRafId);
         myRafId = requestAnimationFrame(tick);
         if (oldIdx >= 0) rafIds[oldIdx] = myRafId;
@@ -101,7 +106,22 @@ export function Terrarium() {
       const ctm = svg!.getScreenCTM();
       if (!ctm) return;
       const loc = pt.matrixTransform(ctm.inverse());
-      if (loc.x < JAR.xMin || loc.x > JAR.xMax || loc.y < JAR.yMin || loc.y > JAR.yMax) return;
+
+      // Use the jar clipPath's actual bbox with generous padding so
+      // clicks near the glass always register.
+      const clipEl = jarClipPathRef.current;
+      if (clipEl) {
+        const bbox = clipEl.getBBox();
+        const pad = 4;
+        if (
+          loc.x < bbox.x - pad ||
+          loc.x > bbox.x + bbox.width + pad ||
+          loc.y < bbox.y - pad ||
+          loc.y > bbox.y + bbox.height + pad
+        ) {
+          return;
+        }
+      }
 
       // Cap at 24, but always read the current layer from the ref.
       const layer = fireflyLayerRef.current;
@@ -145,7 +165,7 @@ export function Terrarium() {
           <defs>
             {/* Slightly enlarged clip so leaves have breathing room and aren't cropped */}
             <clipPath id="jarClip">
-              <path d="M82,112 Q76,342 150,354 Q224,342 218,112 Q150,124 82,112 Z" />
+              <path ref={jarClipPathRef} d="M82,112 Q76,342 150,354 Q224,342 218,112 Q150,124 82,112 Z" />
             </clipPath>
           </defs>
 
