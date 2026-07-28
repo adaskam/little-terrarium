@@ -165,7 +165,7 @@ export function Terrarium() {
           <defs>
             {/* Slightly enlarged clip so leaves have breathing room and aren't cropped */}
             <clipPath id="jarClip">
-              <path d="M82,112 Q76,342 150,354 Q224,342 218,112 Q150,124 82,112 Z" />
+              <path ref={jarClipPathRef} d="M82,112 Q76,342 150,354 Q224,342 218,112 Q150,124 82,112 Z" />
             </clipPath>
           </defs>
 
