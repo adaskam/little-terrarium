@@ -59,6 +59,14 @@ export function Terrarium() {
       layer.appendChild(g);
 
       // Each firefly gets its own independent RAF loop + local drift state.
+      const clipEl = jarClipPathRef.current;
+      const bbox = clipEl?.getBBox() ?? { x: 82, y: 112, width: 136, height: 242 };
+      const pad = 8;
+      const xMin = bbox.x + pad;
+      const xMax = bbox.x + bbox.width - pad;
+      const yMin = bbox.y + pad;
+      const yMax = bbox.y + bbox.height - pad;
+
       let px = x;
       let py = y;
       let vx = (Math.random() - 0.5) * 0.25;
@@ -75,14 +83,13 @@ export function Terrarium() {
         px += vx + Math.sin(t * 1.3) * 0.15;
         py += vy + Math.cos(t * 1.1) * 0.12;
 
-        if (px < JAR.xMin + 6) { px = JAR.xMin + 6; vx = Math.abs(vx); }
-        if (px > JAR.xMax - 6) { px = JAR.xMax - 6; vx = -Math.abs(vx); }
-        if (py < JAR.yMin + 6) { py = JAR.yMin + 6; vy = Math.abs(vy); }
-        if (py > JAR.yMax - 6) { py = JAR.yMax - 6; vy = -Math.abs(vy); }
+        if (px < xMin) { px = xMin; vx = Math.abs(vx); }
+        if (px > xMax) { px = xMax; vx = -Math.abs(vx); }
+        if (py < yMin) { py = yMin; vy = Math.abs(vy); }
+        if (py > yMax) { py = yMax; vy = -Math.abs(vy); }
 
         g.setAttribute("transform", `translate(${px.toFixed(2)} ${py.toFixed(2)})`);
 
-        // Swap out the old id for the new one in the shared ref array.
         const oldIdx = rafIds.indexOf(myRafId);
         myRafId = requestAnimationFrame(tick);
         if (oldIdx >= 0) rafIds[oldIdx] = myRafId;
@@ -99,7 +106,22 @@ export function Terrarium() {
       const ctm = svg!.getScreenCTM();
       if (!ctm) return;
       const loc = pt.matrixTransform(ctm.inverse());
-      if (loc.x < JAR.xMin || loc.x > JAR.xMax || loc.y < JAR.yMin || loc.y > JAR.yMax) return;
+
+      // Use the jar clipPath's actual bbox with generous padding so
+      // clicks near the glass always register.
+      const clipEl = jarClipPathRef.current;
+      if (clipEl) {
+        const bbox = clipEl.getBBox();
+        const pad = 4;
+        if (
+          loc.x < bbox.x - pad ||
+          loc.x > bbox.x + bbox.width + pad ||
+          loc.y < bbox.y - pad ||
+          loc.y > bbox.y + bbox.height + pad
+        ) {
+          return;
+        }
+      }
 
       // Cap at 24, but always read the current layer from the ref.
       const layer = fireflyLayerRef.current;
