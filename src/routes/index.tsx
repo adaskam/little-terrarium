@@ -18,7 +18,7 @@ export const Route = createFileRoute("/")({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Digital Terrarium" },
+      { name: "twitter:title", content: "Little Terrarium — a tiny sanctuary" },
       {
         name: "twitter:description",
         content: "A cozy glass jar with swaying plants and drifting fireflies.",
