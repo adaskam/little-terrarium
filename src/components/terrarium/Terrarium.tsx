@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 
-// Jar interior bounds (matches the jarClip path below).
-const JAR = { xMin: 97, xMax: 203, yMin: 122, yMax: 350 };
-
 const MOTES = [
   { cx: 90, cy: 300, delay: 0 },
   { cx: 150, cy: 280, delay: -3 },
@@ -17,6 +14,7 @@ const SVG_NS = "http://www.w3.org/2000/svg";
 export function Terrarium() {
   const [night, setNight] = useState(false);
   const svgRef = useRef<SVGSVGElement>(null);
+  const jarClipPathRef = useRef<SVGPathElement>(null);
   const fireflyLayerRef = useRef<SVGGElement>(null);
   const rafIdsRef = useRef<number[]>([]);
 
