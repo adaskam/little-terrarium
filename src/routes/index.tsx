@@ -4,13 +4,13 @@ import { Terrarium } from "@/components/terrarium/Terrarium";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Digital Terrarium — a tiny sanctuary" },
+      { title: "Little Terrarium — a tiny sanctuary" },
       {
         name: "description",
         content:
           "A cozy little glass jar on a wooden shelf. Watch the plants sway, tap to add fireflies, and toggle between soft daylight and dusk.",
       },
-      { property: "og:title", content: "Digital Terrarium — a tiny sanctuary" },
+      { property: "og:title", content: "Little Terrarium — a tiny sanctuary" },
       {
         property: "og:description",
         content:
