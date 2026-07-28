@@ -2,9 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 type Firefly = { id: string; x: number; y: number };
 
-// Jar interior polygon in SVG coordinates (viewBox 0 0 300 400).
-// Rounded-rect body: x 60..240, y 70..320. We accept clicks inside this rect.
-const JAR = { xMin: 62, xMax: 238, yMin: 72, yMax: 318 };
+// Jar interior bounds (matches the jarClip path below).
+const JAR = { xMin: 97, xMax: 203, yMin: 122, yMax: 350 };
 
 const MOTES = [
   { cx: 90, cy: 300, delay: 0 },
