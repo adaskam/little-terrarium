@@ -31,12 +31,17 @@ export function Terrarium() {
   // never reset firefly state or interfere with per-firefly RAF loops.
   useEffect(() => {
     const svg = svgRef.current;
-    const layer = fireflyLayerRef.current;
-    if (!svg || !layer) return;
+    if (!svg) return;
 
+    // rafIds ref holds all active animation frame IDs across every firefly.
     const rafIds = rafIdsRef.current;
 
     function spawnFirefly(x: number, y: number) {
+      // Read the layer FRESH from the ref every time — never capture it in
+      // the outer closure — so nothing can go stale between clicks.
+      const layer = fireflyLayerRef.current;
+      if (!layer) return;
+
       const g = document.createElementNS(SVG_NS, "g");
       g.setAttribute("class", "firefly");
       g.setAttribute("transform", `translate(${x} ${y})`);
@@ -44,25 +49,27 @@ export function Terrarium() {
       const glow = document.createElementNS(SVG_NS, "circle");
       glow.setAttribute("class", "glow");
       glow.setAttribute("r", "8");
+      glow.setAttribute("pointer-events", "none");
 
       const core = document.createElementNS(SVG_NS, "circle");
       core.setAttribute("class", "core");
       core.setAttribute("r", "2.2");
+      core.setAttribute("pointer-events", "none");
 
       g.appendChild(glow);
       g.appendChild(core);
-      layer!.appendChild(g);
+      layer.appendChild(g);
 
-      // Each firefly gets its own drift parameters + independent RAF loop.
+      // Each firefly gets its own independent RAF loop + local drift state.
       let px = x;
       let py = y;
       let vx = (Math.random() - 0.5) * 0.25;
       let vy = (Math.random() - 0.5) * 0.25;
       const born = performance.now();
+      let myRafId = 0;
 
       const tick = (now: number) => {
         const t = (now - born) / 1000;
-        // gentle wander via noise-ish sin combo + small velocity drift
         vx += (Math.random() - 0.5) * 0.04;
         vy += (Math.random() - 0.5) * 0.04;
         vx = Math.max(-0.5, Math.min(0.5, vx));
@@ -70,19 +77,21 @@ export function Terrarium() {
         px += vx + Math.sin(t * 1.3) * 0.15;
         py += vy + Math.cos(t * 1.1) * 0.12;
 
-        // soft bounce inside jar interior
         if (px < JAR.xMin + 6) { px = JAR.xMin + 6; vx = Math.abs(vx); }
         if (px > JAR.xMax - 6) { px = JAR.xMax - 6; vx = -Math.abs(vx); }
         if (py < JAR.yMin + 6) { py = JAR.yMin + 6; vy = Math.abs(vy); }
         if (py > JAR.yMax - 6) { py = JAR.yMax - 6; vy = -Math.abs(vy); }
 
         g.setAttribute("transform", `translate(${px.toFixed(2)} ${py.toFixed(2)})`);
-        const id = requestAnimationFrame(tick);
-        rafIds[rafIds.indexOf(prevId)] = id;
-        prevId = id;
+
+        // Swap out the old id for the new one in the shared ref array.
+        const oldIdx = rafIds.indexOf(myRafId);
+        myRafId = requestAnimationFrame(tick);
+        if (oldIdx >= 0) rafIds[oldIdx] = myRafId;
+        else rafIds.push(myRafId);
       };
-      let prevId = requestAnimationFrame(tick);
-      rafIds.push(prevId);
+      myRafId = requestAnimationFrame(tick);
+      rafIds.push(myRafId);
     }
 
     function onClick(e: MouseEvent) {
@@ -93,9 +102,13 @@ export function Terrarium() {
       if (!ctm) return;
       const loc = pt.matrixTransform(ctm.inverse());
       if (loc.x < JAR.xMin || loc.x > JAR.xMax || loc.y < JAR.yMin || loc.y > JAR.yMax) return;
-      // cap at 24 fireflies
-      while (layer!.childElementCount >= 24) {
-        layer!.removeChild(layer!.firstChild!);
+
+      // Cap at 24, but always read the current layer from the ref.
+      const layer = fireflyLayerRef.current;
+      if (layer) {
+        while (layer.childElementCount >= 24 && layer.firstChild) {
+          layer.removeChild(layer.firstChild);
+        }
       }
       spawnFirefly(loc.x, loc.y);
     }
@@ -105,7 +118,10 @@ export function Terrarium() {
       svg.removeEventListener("click", onClick);
       rafIds.forEach((id) => cancelAnimationFrame(id));
       rafIds.length = 0;
-      while (layer.firstChild) layer.removeChild(layer.firstChild);
+      const layer = fireflyLayerRef.current;
+      if (layer) {
+        while (layer.firstChild) layer.removeChild(layer.firstChild);
+      }
     };
   }, []);
 
